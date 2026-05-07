@@ -1,0 +1,417 @@
+Design a complete, industry-standard mobile app UI for "Khelam" using react native— a sports and gaming matchmaking platform where users can discover, join, and host games (futsal, football, cricket, esports, etc.) within their city.
+
+The design must be:
+
+User-friendly, intuitive, and scalable
+
+Cross-platform (iOS + Android)
+
+Dark-themed, energetic, and premium
+
+Inspired by a fusion of GoodRec + Strava + Partiful
+
+🎯 CORE USER FLOWS
+
+Entry & Authentication Flow
+First-time user:
+
+Open app → Welcome screen
+
+Options: Log In / Sign Up
+
+Sign Up via Email or Phone → OTP verification
+
+After OTP verification → user is logged in
+
+First login → City Selection → Sport Selection → Discover
+
+Returning user:
+
+Open app → Directly land on Discover screen
+
+Guest mode:
+
+Not allowed
+
+Game Discovery Flow
+Discover shows only selected sport games
+
+Sorted by nearest upcoming time
+
+Always filtered by selected city
+
+Filters:
+
+Date → single select
+
+Time of day → multi-select
+
+Spots available → single select
+
+Game states:
+
+Full → visible + disabled Join + "Full" badge
+
+Locked (<1 hour) → visible + disabled Join + "Locked" badge
+
+Join Game + Payment Flow
+Tap “Join Game” → opens confirmation screen
+
+Then proceed to payment
+
+Slot handling:
+
+No reservation system
+
+First successful payment confirms slot
+
+Payment outcomes:
+
+Success → return to Game Details (joined state updated)
+
+Failure → return to Game Details + error feedback
+
+Cancellation:
+
+Allowed until 24 hours before game
+
+Refund → wallet credit
+
+Hosting Flow
+Host Verification:
+
+ID upload + manual approval
+
+States: Not Applied → Pending → Verified
+
+Create Game:
+
+Single scrollable form
+
+Editing Rules:
+
+If no players joined → fully editable
+
+If players joined:
+
+Cannot edit: time, venue, price, slots
+
+Can edit: rules, notes
+
+Cancellation:
+
+Allowed anytime (must provide reason)
+
+Players receive:
+
+Full refund (wallet)
+
+Notification
+
+Host permissions:
+
+Can view joined players list
+
+Cannot approve/reject players
+
+No chat (MVP)
+
+Notifications
+Trigger events:
+
+Game joined confirmation
+
+Game reminders
+
+Host cancels game
+
+Host verification updates
+
+Timing:
+
+24 hours before + 1 hour before
+
+Channel:
+
+In-app notifications only
+
+Behavior:
+
+Tapping notification opens relevant screen (deep linking)
+
+Edge Cases & UX States
+Include for ALL screens:
+
+Loading → skeleton UI
+
+Empty → illustration + helpful message
+
+Error → retry option
+
+Disabled → clear visual state
+
+Critical edge cases:
+
+Game becomes full while joining → show error
+
+Payment failure → clear feedback
+
+Network failure → toast + retry
+
+🎨 DESIGN SYSTEM
+
+Colors:
+
+Background: #0D0D0D
+
+Surface: #1A1A1A
+
+Elevated: #242424
+
+Primary: #C8F248 (electric lime)
+
+Error/Alert: #FF4D4D
+
+Text Primary: #FFFFFF
+
+Text Secondary: #9E9E9E
+
+Divider: #2E2E2E
+
+Typography:
+
+Font: Inter / Plus Jakarta Sans
+
+H1: 28 Bold
+
+H2: 22 SemiBold
+
+Body: 15 Regular
+
+Caption: 12 Regular
+
+UI Rules:
+
+8pt spacing system
+
+16px card radius
+
+Pill buttons (100px radius)
+
+Subtle elevation for cards
+
+Smooth micro-interactions
+
+📱 Screens to Design (12 Screens)
+
+Screen 1 — Welcome / Auth Entry
+
+Full-screen dark background with a dynamic sports collage or blurred action photo
+
+"Khelam" logo centered (bold wordmark, lime accent)
+
+Tagline below: "Find your game. Join the squad."
+
+Two CTA buttons: Log In (outlined) | Sign Up (filled lime)
+
+"Continue with Google" ghost option at bottom
+
+Screen 2 — Login
+
+Minimal dark form screen
+
+"Welcome Back" heading
+
+Email / Phone input field (dark filled input, subtle border)
+
+Password field with show/hide toggle
+
+"Forgot Password?" link (lime)
+
+Primary CTA: Log In (full-width lime pill button)
+
+Divider + Social login option
+
+Screen 3 — Sign Up
+
+Step-indicator at top (Step 1 of 2)
+
+Form fields: Full Name, Email, Phone, Password, Date of Birth
+
+Profile photo upload circle with camera icon overlay
+
+Primary CTA: Continue (full-width lime)
+
+"Already have an account? Log In" at bottom
+
+Screen 4 — Select Your City
+
+"Where are you playing?" heading
+
+Search bar at top
+
+Scrollable grid of city cards (2 columns) with a photo background, city name bold overlay
+
+Cities: Kathmandu, Pokhara, Lalitpur, Bhaktapur, Chitwan, Butwal, Biratnagar, Birgunj
+
+Selected city gets a lime border/checkmark
+
+Sticky Continue button at bottom
+
+Screen 5 — Select a Sport
+
+"What do you play?" heading
+
+3-column icon grid layout
+
+Each sport card: square card, sport action photo background, sport name at bottom, subtle dark overlay
+
+Sports: Futsal, Football, Volleyball, Cricket, Basketball, Badminton, Table Tennis, Tennis, E-Sports
+
+Selected sport gets lime ring/glow border
+
+Find Games CTA at bottom
+
+Screen 6 — Discover (Home)
+
+Top Bar: Left: 📍 Kathmandu (bold, tappable dropdown) | Right: 🔔 bell with red dot badge
+
+Sport Filter Chips Row (horizontally scrollable): Each chip has small sport icon + label. Selected chip: lime filled. Unselected: dark outlined. Sports include: All, Futsal, Football, Cricket, Basketball, Badminton, E-Sports
+
+Filter Categories Row: Three tappable pills — 📅 Date | 🕐 Time of Day | 👥 Spots — dark filled, open bottom sheet on tap
+
+Game List grouped by day headers (Today, Tomorrow, Thu May 9, Fri May 10) in secondary text
+
+Game Card (per row):
+
+Left: square sport thumbnail (70×70, rounded-16)
+
+Right content: Game name (bold), indoor/outdoor badge pill, time + date, slots bar 7/10 with small progress indicator, address line, host avatar + name
+
+Card background: #1A1A1A, subtle border, full-width
+
+Bottom Nav Tab Bar: 3 tabs — Discover (compass icon) | My Games (calendar icon) | Profile (user icon). Active tab: lime icon + label. Inactive: grey.
+
+Screen 7 — My Games
+
+Reuse Top Bar from Discover
+
+Two tabs: Upcoming | Past (underline tab style, active = lime)
+
+Upcoming tab: List of joined game cards (same card component as Discover, but with a Joined ✓ lime badge)
+
+Past tab: Same cards but greyed out, read-only, with a Completed badge
+
+Screen 8 — Profile
+
+Profile photo (large circle, 80px), name, member since
+
+Stats row: Games Played | Games Hosted | City
+
+Menu sections with chevron rows:
+
+Account Settings (Edit Profile, Change Password, Notifications)
+
+Host Profile section (with a Become a Host CTA card if not verified, or Host Dashboard if verified — lime accent card)
+
+Support & Legal
+
+Sign Out at bottom (red text)
+
+Screen 9 — Game Details
+
+Nav Bar: Back chevron + Game Name (bold, centered) + Share icon + Invite Friends icon
+
+Hero: Full-width swipeable photo carousel with dot indicators, subtle bottom gradient fade to background
+
+Detail Rows (icon + label): Date & Time | Venue Address | Duration + Indoor/Outdoor | Format (e.g., 4 vs 4) | Entry Fee (lime highlighted)
+
+Joined Players: Horizontal scrollable row of circular profile avatars with +N more
+
+Info Sections (expandable or stacked cards):
+
+Field/Ground Details
+
+Kit to Bring
+
+Rules
+
+Host Profile card: photo, name, short bio, contact button
+
+"Contact Khelam Support" tappable row at bottom of content
+
+Sticky Bottom Bar: Full-width Join Game lime button with price shown on the right
+
+Screen 10 — Join Game / Payment
+
+Bottom sheet or full screen
+
+Game summary card at top: name, date, time, slots, price
+
+"Select Payment Method" heading
+
+Payment option cards (radio select): eSewa logo | Khalti logo | FonePay logo — dark cards with logo + name, selected = lime border
+
+Fee breakdown: Entry Fee + Platform Fee = Total
+
+Primary CTA: Confirm & Pay NPR 500 (full-width lime button)
+
+Screen 11 — Become a Host
+
+Accessible from Profile
+
+States to show:
+
+Not Applied: Illustration/icon of a whistle or trophy, heading "Host your own game", short description, Start Verification lime CTA. Form with: Full Name, Phone, ID Type dropdown, ID Upload button
+
+Pending: Status card with clock icon, "Verification in progress" message, submitted details shown read-only
+
+Verified: Green checkmark badge, "You're a verified host!" message, Go to Host Dashboard CTA
+
+Screen 12 — Host Dashboard + Host a Game
+
+Host Dashboard:
+
+Header with "Host Dashboard" + floating + lime FAB (bottom right)
+
+Two sections: Upcoming Hosted Games | Previously Hosted Games
+
+Game cards same component as Discover but with an Edit / View action
+
+Host Game Form:
+
+Sport
+
+Venue
+
+Time
+
+Slots
+
+Price
+
+Rules
+
+Upload image
+
+Publish button
+
+🔥 GLOBAL UX RULES
+
+Clear tap feedback on all interactions
+
+Consistent navigation patterns
+
+Bottom sheets for filters/forms
+
+Sticky CTA buttons
+
+Badge system:
+
+Full
+
+Locked
+
+Verified host
+
+App Name: Khelam Platform: iOS + Android Theme: Dark, energetic, premium Primary Accent: Electric Lime (#C8F248)

@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Khelam"
+version = "1.0.0"
+id = "artifacts/khelam"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 18905
+
+[services.development]
+run = "pnpm --filter @workspace/khelam run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/khelam", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/khelam", "run", "serve" ]
+
+[services.env]
+PORT = "18905"
+BASE_PATH = "/"
