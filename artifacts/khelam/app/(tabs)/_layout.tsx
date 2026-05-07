@@ -1,39 +1,22 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { SymbolView } from "expo-symbols";
 import React from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { Platform, StyleSheet, useColorScheme } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="discover">
-        <Icon sf={{ default: "safari", selected: "safari.fill" }} />
-        <Label>Discover</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="my-games">
-        <Icon sf={{ default: "calendar", selected: "calendar.fill" }} />
-        <Label>My Games</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <Icon sf={{ default: "person", selected: "person.fill" }} />
-        <Label>Profile</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
-
-function ClassicTabLayout() {
+export default function TabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
-  const isWeb = Platform.OS === "web";
+  const isAndroid = Platform.OS === "android";
+  const insets = useSafeAreaInsets();
+
+  const TAB_BAR_HEIGHT = isAndroid ? 60 + insets.bottom : isIOS ? 60 : 84;
+  const TAB_BAR_PADDING_BOTTOM = isAndroid ? insets.bottom + 6 : isIOS ? 0 : 34;
 
   return (
     <Tabs
@@ -47,12 +30,15 @@ function ClassicTabLayout() {
           borderTopWidth: 1,
           borderTopColor: colors.border,
           elevation: 0,
-          height: isWeb ? 84 : 68,
-          paddingBottom: isWeb ? 34 : 10,
+          shadowOpacity: 0,
+          height: TAB_BAR_HEIGHT,
+          paddingBottom: TAB_BAR_PADDING_BOTTOM,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "600",
+          marginTop: 2,
         },
         tabBarBackground: () =>
           isIOS ? (
@@ -68,45 +54,54 @@ function ClassicTabLayout() {
         name="discover"
         options={{
           title: "Discover",
-          tabBarIcon: ({ color, focused }) =>
-            isIOS ? (
-              <SymbolView name={focused ? "safari.fill" : "safari"} tintColor={color} size={24} />
-            ) : (
-              <Ionicons name={focused ? "compass" : "compass-outline"} size={24} color={color} />
-            ),
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "compass" : "compass-outline"}
+              size={24}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="my-games"
         options={{
           title: "My Games",
-          tabBarIcon: ({ color, focused }) =>
-            isIOS ? (
-              <SymbolView name={focused ? "calendar.fill" : "calendar"} tintColor={color} size={24} />
-            ) : (
-              <Ionicons name={focused ? "calendar" : "calendar-outline"} size={24} color={color} />
-            ),
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "calendar" : "calendar-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="host"
+        options={{
+          title: "Host",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "add-circle" : "add-circle-outline"}
+              size={26}
+              color={focused ? "#1A1A1A" : color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, focused }) =>
-            isIOS ? (
-              <SymbolView name={focused ? "person.fill" : "person"} tintColor={color} size={24} />
-            ) : (
-              <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
-            ),
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={24}
+              color={color}
+            />
+          ),
         }}
       />
     </Tabs>
   );
-}
-
-export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
 }

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,26 +15,55 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useColors } from "@/hooks/useColors";
-
 export default function SignupScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [dob, setDob] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateStep1 = () => {
+    const e: Record<string, string> = {};
+    if (!name.trim()) e.name = "Full name is required";
+    if (!email.trim()) e.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(email)) e.email = "Enter a valid email";
+    if (!phone.trim()) e.phone = "Phone number is required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const e: Record<string, string> = {};
+    if (!password) e.password = "Password is required";
+    else if (password.length < 6) e.password = "Password must be at least 6 characters";
+    if (!confirmPassword) e.confirmPassword = "Please confirm your password";
+    else if (password !== confirmPassword) e.confirmPassword = "Passwords do not match";
+    if (!dob.trim()) e.dob = "Date of birth is required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const handleContinue = () => {
     if (step === 1) {
-      setStep(2);
+      if (validateStep1()) {
+        setErrors({});
+        setStep(2);
+      }
     } else {
-      router.push("/otp");
+      if (validateStep2()) {
+        router.push("/otp");
+      }
     }
   };
+
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
+  const passwordsMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
   return (
     <View style={[styles.container, { backgroundColor: "#0D0D0D" }]}>
@@ -48,8 +78,12 @@ export default function SignupScreen() {
             { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 32 },
           ]}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity onPress={() => (step > 1 ? setStep(1) : router.back())} style={styles.back}>
+          <TouchableOpacity
+            onPress={() => (step > 1 ? setStep(1) : router.back())}
+            style={styles.back}
+          >
             <Ionicons name="arrow-back" size={24} color="#FFF" />
           </TouchableOpacity>
 
@@ -77,72 +111,151 @@ export default function SignupScreen() {
           <Text style={styles.sub}>
             {step === 1
               ? "Join the Khelam community"
-              : "Fill in the remaining details"}
+              : "Set your password and birthday"}
           </Text>
 
           <View style={styles.form}>
             {step === 1 ? (
               <>
-                {/* Avatar upload */}
+                {/* Avatar upload — optional */}
                 <View style={styles.avatarRow}>
-                  <View style={[styles.avatarCircle, { backgroundColor: "#1A1A1A", borderColor: "#C8F248" + "60" }]}>
+                  <View
+                    style={[
+                      styles.avatarCircle,
+                      { backgroundColor: "#1A1A1A", borderColor: "#C8F24860" },
+                    ]}
+                  >
                     <Ionicons name="person-outline" size={32} color="#9E9E9E" />
                     <View style={[styles.cameraIcon, { backgroundColor: "#C8F248" }]}>
                       <Ionicons name="camera" size={14} color="#0D0D0D" />
                     </View>
                   </View>
-                  <Text style={{ color: "#9E9E9E", fontSize: 13 }}>Add photo</Text>
+                  <Text style={{ color: "#9E9E9E", fontSize: 13 }}>
+                    Add photo{" "}
+                    <Text style={{ color: "#4E4E4E" }}>(optional)</Text>
+                  </Text>
                 </View>
 
                 <InputField
                   icon="person-outline"
-                  placeholder="Full Name"
+                  placeholder="Full Name *"
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={(v) => { setName(v); setErrors((e) => ({ ...e, name: "" })); }}
+                  error={errors.name}
                 />
                 <InputField
                   icon="mail-outline"
-                  placeholder="Email address"
+                  placeholder="Email address *"
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: "" })); }}
                   keyboardType="email-address"
+                  error={errors.email}
                 />
                 <InputField
                   icon="call-outline"
-                  placeholder="Phone number"
+                  placeholder="Phone number *"
                   value={phone}
-                  onChangeText={setPhone}
+                  onChangeText={(v) => { setPhone(v); setErrors((e) => ({ ...e, phone: "" })); }}
                   keyboardType="phone-pad"
+                  error={errors.phone}
                 />
               </>
             ) : (
               <>
-                <View style={[styles.inputWrap, { backgroundColor: "#1A1A1A", borderColor: "#2E2E2E" }]}>
-                  <Ionicons name="lock-closed-outline" size={18} color="#9E9E9E" />
-                  <TextInput
-                    style={[styles.input, { color: "#FFF" }]}
-                    placeholder="Create password"
-                    placeholderTextColor="#9E9E9E"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    <Ionicons
-                      name={showPassword ? "eye-off-outline" : "eye-outline"}
-                      size={18}
-                      color="#9E9E9E"
+                {/* Password */}
+                <View style={styles.fieldGroup}>
+                  <View
+                    style={[
+                      styles.inputWrap,
+                      {
+                        backgroundColor: "#1A1A1A",
+                        borderColor: errors.password ? "#FF4D4D" : "#2E2E2E",
+                      },
+                    ]}
+                  >
+                    <Ionicons name="lock-closed-outline" size={18} color="#9E9E9E" />
+                    <TextInput
+                      style={[styles.input, { color: "#FFF" }]}
+                      placeholder="Create password *"
+                      placeholderTextColor="#9E9E9E"
+                      value={password}
+                      onChangeText={(v) => {
+                        setPassword(v);
+                        setErrors((e) => ({ ...e, password: "" }));
+                      }}
+                      secureTextEntry={!showPassword}
                     />
-                  </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={18}
+                        color="#9E9E9E"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  {errors.password ? (
+                    <Text style={styles.errorText}>{errors.password}</Text>
+                  ) : null}
                 </View>
+
+                {/* Confirm Password */}
+                <View style={styles.fieldGroup}>
+                  <View
+                    style={[
+                      styles.inputWrap,
+                      {
+                        backgroundColor: "#1A1A1A",
+                        borderColor: errors.confirmPassword
+                          ? "#FF4D4D"
+                          : passwordsMatch
+                          ? "#22C55E"
+                          : "#2E2E2E",
+                      },
+                    ]}
+                  >
+                    <Ionicons name="lock-closed-outline" size={18} color="#9E9E9E" />
+                    <TextInput
+                      style={[styles.input, { color: "#FFF" }]}
+                      placeholder="Confirm password *"
+                      placeholderTextColor="#9E9E9E"
+                      value={confirmPassword}
+                      onChangeText={(v) => {
+                        setConfirmPassword(v);
+                        setErrors((e) => ({ ...e, confirmPassword: "" }));
+                      }}
+                      secureTextEntry={!showConfirm}
+                    />
+                    {passwordsMatch ? (
+                      <Ionicons name="checkmark-circle" size={18} color="#22C55E" />
+                    ) : (
+                      <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
+                        <Ionicons
+                          name={showConfirm ? "eye-off-outline" : "eye-outline"}
+                          size={18}
+                          color="#9E9E9E"
+                        />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {errors.confirmPassword ? (
+                    <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                  ) : passwordsMismatch ? (
+                    <Text style={styles.errorText}>Passwords do not match</Text>
+                  ) : null}
+                </View>
+
                 <InputField
                   icon="calendar-outline"
-                  placeholder="Date of Birth (DD/MM/YYYY)"
+                  placeholder="Date of Birth (DD/MM/YYYY) *"
                   value={dob}
-                  onChangeText={setDob}
+                  onChangeText={(v) => { setDob(v); setErrors((e) => ({ ...e, dob: "" })); }}
+                  keyboardType="number-pad"
+                  error={errors.dob}
                 />
 
-                <View style={[styles.termsBox, { backgroundColor: "#1A1A1A", borderColor: "#2E2E2E" }]}>
+                <View
+                  style={[styles.termsBox, { backgroundColor: "#1A1A1A", borderColor: "#2E2E2E" }]}
+                >
                   <Ionicons name="shield-checkmark-outline" size={16} color="#C8F248" />
                   <Text style={{ color: "#9E9E9E", fontSize: 12, flex: 1 }}>
                     By signing up, you agree to our{" "}
@@ -165,7 +278,10 @@ export default function SignupScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity onPress={() => router.push("/login")} style={styles.loginRow}>
+          <TouchableOpacity
+            onPress={() => router.push("/login")}
+            style={styles.loginRow}
+          >
             <Text style={{ color: "#9E9E9E", fontSize: 14 }}>
               Already have an account?{" "}
               <Text style={{ color: "#C8F248", fontWeight: "700" }}>Log In</Text>
@@ -183,25 +299,38 @@ function InputField({
   value,
   onChangeText,
   keyboardType,
+  error,
 }: {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   placeholder: string;
   value: string;
   onChangeText: (v: string) => void;
   keyboardType?: TextInput["props"]["keyboardType"];
+  error?: string;
 }) {
   return (
-    <View style={[styles.inputWrap, { backgroundColor: "#1A1A1A", borderColor: "#2E2E2E" }]}>
-      <Ionicons name={icon} size={18} color="#9E9E9E" />
-      <TextInput
-        style={[styles.input, { color: "#FFF" }]}
-        placeholder={placeholder}
-        placeholderTextColor="#9E9E9E"
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType}
-        autoCapitalize="none"
-      />
+    <View style={styles.fieldGroup}>
+      <View
+        style={[
+          styles.inputWrap,
+          {
+            backgroundColor: "#1A1A1A",
+            borderColor: error ? "#FF4D4D" : "#2E2E2E",
+          },
+        ]}
+      >
+        <Ionicons name={icon} size={18} color="#9E9E9E" />
+        <TextInput
+          style={[styles.input, { color: "#FFF" }]}
+          placeholder={placeholder}
+          placeholderTextColor="#9E9E9E"
+          value={value}
+          onChangeText={onChangeText}
+          keyboardType={keyboardType}
+          autoCapitalize="none"
+        />
+      </View>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 }
@@ -217,10 +346,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   stepItem: {},
-  stepDot: {
-    height: 8,
-    borderRadius: 100,
-  },
+  stepDot: { height: 8, borderRadius: 100 },
   stepText: { color: "#9E9E9E", fontSize: 13, marginLeft: 8 },
   heading: { fontSize: 28, fontWeight: "800", color: "#FFF" },
   sub: { fontSize: 15, color: "#9E9E9E", marginBottom: 28 },
@@ -244,16 +370,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  fieldGroup: { gap: 5 },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     paddingHorizontal: 14,
     paddingVertical: 14,
     gap: 10,
   },
   input: { flex: 1, fontSize: 15 },
+  errorText: { fontSize: 12, color: "#FF4D4D", marginLeft: 4 },
   termsBox: {
     flexDirection: "row",
     gap: 10,
