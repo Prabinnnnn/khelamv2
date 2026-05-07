@@ -70,25 +70,7 @@ export default function BecomeHostScreen() {
               </Text>
               <Text style={[styles.heroSub, { color: colors.mutedForeground }]}>
                 Become a verified Khelam host and organize sports sessions for your community.
-                Earn from every player who joins!
               </Text>
-            </View>
-
-            {/* Benefits */}
-            <View style={styles.benefitsRow}>
-              {[
-                { icon: "cash-outline", label: "Earn per game" },
-                { icon: "people-outline", label: "Build community" },
-                { icon: "star-outline", label: "Get verified" },
-              ].map((b) => (
-                <View
-                  key={b.label}
-                  style={[styles.benefit, { backgroundColor: colors.card, borderColor: colors.border }]}
-                >
-                  <Ionicons name={b.icon as any} size={20} color="#1A1A1A" />
-                  <Text style={[styles.benefitLabel, { color: colors.foreground }]}>{b.label}</Text>
-                </View>
-              ))}
             </View>
 
             {/* Form */}
@@ -274,16 +256,6 @@ const styles = StyleSheet.create({
   },
   heroTitle: { fontSize: 24, fontWeight: "800", textAlign: "center" },
   heroSub: { fontSize: 14, textAlign: "center", lineHeight: 22 },
-  benefitsRow: { flexDirection: "row", gap: 10 },
-  benefit: {
-    flex: 1,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 14,
-    alignItems: "center",
-    gap: 6,
-  },
-  benefitLabel: { fontSize: 12, fontWeight: "600", textAlign: "center" },
   formTitle: { fontSize: 18, fontWeight: "700" },
   form: { gap: 14 },
   fieldGroup: { gap: 6 },
