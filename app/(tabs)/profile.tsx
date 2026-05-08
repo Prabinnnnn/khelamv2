@@ -138,7 +138,7 @@ export default function ProfileScreen() {
                 Become a Host
               </Text>
               <Text style={[styles.hostSub, { color: colors.mutedForeground }]}>
-                Organize games and earn
+                Organize and Play Games
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />

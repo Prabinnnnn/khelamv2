@@ -152,7 +152,8 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 60,
   },
   logoArea: {
     alignItems: "center",

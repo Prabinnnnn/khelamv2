@@ -21,7 +21,7 @@ export interface Game {
   hostAvatar: string;
   hostBio: string;
   image: string;
-  status: "open" | "full" | "locked";
+  status: "open" | "full" | "locked" | "completed" | "cancelled";
   rules: string;
   notes: string;
   kitToBring: string[];

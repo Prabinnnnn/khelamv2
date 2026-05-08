@@ -21,10 +21,22 @@ export default function HostDashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { hostedGames } = useGames();
+  const [activeTab, setActiveTab] = React.useState<"Upcoming" | "Hosted" | "Cancelled">("Upcoming");
+
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
-  const upcoming = hostedGames.filter((g) => g.status !== "full");
-  const past: typeof hostedGames = [];
+  const stats = {
+    upcoming: hostedGames.filter((g) => ["open", "full", "locked"].includes(g.status)).length,
+    hosted: hostedGames.filter((g) => g.status === "completed").length,
+    cancelled: hostedGames.filter((g) => g.status === "cancelled").length,
+  };
+
+  const filteredGames = hostedGames.filter((g) => {
+    if (activeTab === "Upcoming") return ["open", "full", "locked"].includes(g.status);
+    if (activeTab === "Hosted") return g.status === "completed";
+    if (activeTab === "Cancelled") return g.status === "cancelled";
+    return true;
+  });
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -47,54 +59,54 @@ export default function HostDashboardScreen() {
       {/* Stats */}
       <View style={styles.statsRow}>
         {[
-          { value: hostedGames.length, label: "Total Games", icon: "trophy-outline" },
-          { value: hostedGames.reduce((s, g) => s + g.filledSlots, 0), label: "Players Hosted", icon: "people-outline" },
-          { value: `NPR ${hostedGames.reduce((s, g) => s + g.price * g.filledSlots, 0)}`, label: "Total Earned", icon: "cash-outline" },
+          { value: stats.upcoming, label: "Upcoming", icon: "calendar-outline" },
+          { value: stats.hosted, label: "Hosted", icon: "checkmark-done-outline" },
+          { value: stats.cancelled, label: "Cancelled", icon: "close-circle-outline" },
         ].map((s, i) => (
           <View key={i} style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Ionicons name={s.icon as any} size={18} color="#1A1A1A" />
+            <Ionicons name={s.icon as any} size={18} color="#C8F248" />
             <Text style={[styles.statValue, { color: colors.foreground }]}>{s.value}</Text>
             <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{s.label}</Text>
           </View>
         ))}
       </View>
 
+      {/* Tabs */}
+      <View style={[styles.tabsContainer, { borderBottomColor: colors.border }]}>
+        {["Upcoming", "Hosted", "Cancelled"].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[
+              styles.tabBtn,
+              activeTab === tab && { borderBottomColor: "#C8F248", borderBottomWidth: 2 },
+            ]}
+            onPress={() => setActiveTab(tab as any)}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                { color: activeTab === tab ? colors.foreground : colors.mutedForeground },
+                activeTab === tab && { fontWeight: "700" },
+              ]}
+            >
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {/* Game list */}
       <FlatList
-        data={[...upcoming, ...past]}
+        data={filteredGames}
         keyExtractor={(g) => g.id}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 120 }]}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 120, paddingTop: 16 }]}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <Text style={[styles.listHeader, { color: colors.mutedForeground }]}>
-            {upcoming.length} Upcoming
-          </Text>
-        }
+        ListHeaderComponent={null}
         renderItem={({ item }) => (
-          <View>
-            <GameCard
-              game={item}
-              onPress={() => router.push(`/game/${item.id}`)}
-            />
-            {/* Edit/View actions */}
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-                onPress={() => router.push(`/host/create?editId=${item.id}`)}
-              >
-                <Ionicons name="pencil-outline" size={16} color={colors.foreground} />
-                <Text style={[styles.actionText, { color: colors.foreground }]}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-              >
-                <Ionicons name="people-outline" size={16} color={colors.foreground} />
-                <Text style={[styles.actionText, { color: colors.foreground }]}>
-                  {item.filledSlots} Players
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <GameCard
+            game={item}
+            onPress={() => router.push(`/game/${item.id}`)}
+          />
         )}
         ListEmptyComponent={
           <EmptyState
@@ -161,17 +173,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 12,
   },
-  actionRow: { flexDirection: "row", gap: 10, marginTop: -4, marginBottom: 16 },
-  actionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 100,
-    borderWidth: 1,
-  },
-  actionText: { fontSize: 13, fontWeight: "600" },
   fab: {
     position: "absolute",
     right: 20,
@@ -185,5 +186,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
+  },
+  tabsContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    marginTop: 8,
+  },
+  tabBtn: {
+    paddingVertical: 12,
+    marginRight: 24,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

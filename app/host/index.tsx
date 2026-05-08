@@ -23,19 +23,26 @@ export default function BecomeHostScreen() {
 
   const [fullName, setFullName] = useState(user?.name ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
+  const [address, setAddress] = useState("");
   const [idType, setIdType] = useState("Citizenship");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const status = user?.hostStatus ?? "not_applied";
 
   const handleApply = async () => {
-    if (!fullName || !phone) {
+    if (!fullName || !phone || !address) {
       Alert.alert("Required", "Please fill in all required fields.");
+      return;
+    }
+    if (!agreedToTerms) {
+      Alert.alert("Agreement Required", "Please agree to the Terms and Conditions to proceed.");
       return;
     }
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
-    await updateUser({ hostStatus: "pending" });
+    // Skip pending state for testing
+    await updateUser({ hostStatus: "verified" });
     setLoading(false);
   };
 
@@ -94,6 +101,13 @@ export default function BecomeHostScreen() {
                 keyboardType="phone-pad"
                 colors={colors}
               />
+              <Field
+                label="Current Address"
+                icon="location-outline"
+                value={address}
+                onChangeText={setAddress}
+                colors={colors}
+              />
 
               {/* ID Type Selector */}
               <View style={styles.fieldGroup}>
@@ -134,6 +148,26 @@ export default function BecomeHostScreen() {
                 </Text>
                 <Text style={[styles.uploadSub, { color: colors.mutedForeground }]}>
                   JPG, PNG or PDF up to 5MB
+                </Text>
+              </TouchableOpacity>
+
+              {/* Terms & Conditions */}
+              <TouchableOpacity
+                style={styles.termsContainer}
+                onPress={() => setAgreedToTerms(!agreedToTerms)}
+                activeOpacity={0.8}
+              >
+                <View style={[
+                  styles.checkbox,
+                  {
+                    backgroundColor: agreedToTerms ? "#C8F248" : colors.card,
+                    borderColor: agreedToTerms ? "#C8F248" : colors.border
+                  }
+                ]}>
+                  {agreedToTerms && <Ionicons name="checkmark" size={14} color="#0D0D0D" />}
+                </View>
+                <Text style={[styles.termsText, { color: colors.mutedForeground }]}>
+                  I agree to the <Text style={{ color: "#C8F248", fontWeight: "700" }}>Terms and Conditions</Text> for Khelam Hosts and understand the responsibilities of organizing games.
                 </Text>
               </TouchableOpacity>
             </View>
@@ -312,4 +346,24 @@ const styles = StyleSheet.create({
   },
   submittedLabel: { fontSize: 12, marginBottom: 4 },
   submittedValue: { fontSize: 14, fontWeight: "600" },
+  termsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+    alignItems: "flex-start",
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
 });

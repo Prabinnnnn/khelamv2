@@ -72,6 +72,18 @@ export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
+  const [notifications, setNotifications] = React.useState(NOTIFICATIONS);
+
+  const handleMarkAllRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  };
+
+  const toggleRead = (id: string) => {
+    setNotifications(notifications.map(n => 
+      n.id === id ? { ...n, read: true } : n
+    ));
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="dark-content" />
@@ -84,7 +96,7 @@ export default function NotificationsScreen() {
           <Ionicons name="arrow-back" size={20} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.foreground }]}>Notifications</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handleMarkAllRead}>
           <Text style={{ color: "#1A1A1A", fontSize: 13, fontWeight: "600" }}>
             Mark all read
           </Text>
@@ -92,7 +104,7 @@ export default function NotificationsScreen() {
       </View>
 
       <FlatList
-        data={NOTIFICATIONS}
+        data={notifications}
         keyExtractor={(n) => n.id}
         contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
@@ -107,6 +119,7 @@ export default function NotificationsScreen() {
                 borderLeftWidth: item.read ? 1 : 3,
               },
             ]}
+            onPress={() => toggleRead(item.id)}
             activeOpacity={0.8}
           >
             <View

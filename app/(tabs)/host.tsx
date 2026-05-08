@@ -44,15 +44,14 @@ export default function HostTab() {
                 Become a Host
               </Text>
               <Text style={[styles.heroSub, { color: colors.mutedForeground }]}>
-                Organize games, build your community, and earn on every player
-                who joins your sessions.
+                Organize and play games. Make friends, connect with fellow sports enthusiasts, and build your community
               </Text>
 
               <View style={styles.benefitsRow}>
                 {[
-                  { icon: "cash-outline" as const, label: "Earn per game" },
-                  { icon: "people-outline" as const, label: "Build community" },
-                  { icon: "star-outline" as const, label: "Get verified" },
+                  { icon: "football" as const, label: "Play Games" },
+                  { icon: "person-add" as const, label: "Make Friends" },
+                  { icon: "people-circle" as const, label: "Build Community" },
                 ].map((b) => (
                   <View
                     key={b.label}

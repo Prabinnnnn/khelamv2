@@ -95,29 +95,28 @@ export default function GameDetailScreen() {
       <View
         style={[
           styles.navBar,
-          { paddingTop: insets.top + 8, backgroundColor: "transparent" },
+          {
+            paddingTop: insets.top + 8,
+            backgroundColor: colors.background,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border
+          },
         ]}
-        pointerEvents="box-none"
       >
         <TouchableOpacity
-          style={[styles.navBtn, { backgroundColor: "rgba(0,0,0,0.5)" }]}
+          style={styles.navBtn}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={20} color="#FFF" />
+          <Ionicons name="arrow-back" size={20} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.navTitle} numberOfLines={1}>
-          {game.title}
+        <Text style={[styles.navTitle, { color: colors.foreground }]} numberOfLines={1}>
+          {game.sport === "Futsal" ? "🥅" : game.sport === "Football" ? "⚽" : game.sport === "Cricket" ? "🏏" : "🏆"} {game.title}
         </Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <TouchableOpacity
-            style={[styles.navBtn, { backgroundColor: "rgba(0,0,0,0.5)" }]}
+            style={styles.navBtn}
           >
-            <Ionicons name="share-outline" size={20} color="#FFF" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.navBtn, { backgroundColor: "rgba(0,0,0,0.5)" }]}
-          >
-            <Ionicons name="person-add-outline" size={20} color="#FFF" />
+            <Ionicons name="share-outline" size={20} color={colors.foreground} />
           </TouchableOpacity>
         </View>
       </View>
@@ -132,7 +131,6 @@ export default function GameDetailScreen() {
             <Text style={styles.heroEmoji}>
               {game.sport === "Futsal" ? "🥅" : game.sport === "Football" ? "⚽" : game.sport === "Cricket" ? "🏏" : "🏆"}
             </Text>
-            <View style={styles.heroGradient} />
           </View>
         </View>
 
@@ -141,7 +139,7 @@ export default function GameDetailScreen() {
           <View style={styles.titleRow}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={[styles.gameTitle, { color: colors.foreground }]}>
-                {game.title}
+                {game.sport === "Futsal" ? "🥅" : game.sport === "Football" ? "⚽" : game.sport === "Cricket" ? "🏏" : "🏆"} {game.title}
               </Text>
               <View style={styles.badges}>
                 <View style={[styles.sportBadge, { backgroundColor: "#C8F24820" }]}>
@@ -315,7 +313,10 @@ export default function GameDetailScreen() {
           </View>
 
           {/* Support */}
-          <TouchableOpacity style={[styles.supportRow, { borderColor: colors.border }]}>
+          <TouchableOpacity
+            style={[styles.supportRow, { borderColor: colors.border }]}
+            onPress={() => router.push("/contact-support")}
+          >
             <Ionicons name="help-circle-outline" size={18} color={colors.mutedForeground} />
             <Text style={[styles.supportText, { color: colors.mutedForeground }]}>
               Contact Khelam Support
@@ -380,10 +381,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   notFound: { flex: 1, alignItems: "center", justifyContent: "center" },
   navBar: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
     zIndex: 10,
     flexDirection: "row",
     alignItems: "center",
@@ -400,7 +397,6 @@ const styles = StyleSheet.create({
   },
   navTitle: {
     flex: 1,
-    color: "#FFF",
     fontSize: 16,
     fontWeight: "700",
     textAlign: "center",
@@ -412,14 +408,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   heroEmoji: { fontSize: 80 },
-  heroGradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 120,
-    backgroundColor: "rgba(250,251,232,0.9)",
-  },
   content: { padding: 20, gap: 16 },
   titleRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   gameTitle: { fontSize: 22, fontWeight: "800", lineHeight: 28 },
