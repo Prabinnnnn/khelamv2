@@ -12,11 +12,16 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
-  const isAndroid = Platform.OS === "android";
   const insets = useSafeAreaInsets();
 
-  const TAB_BAR_HEIGHT = isAndroid ? 60 + insets.bottom : isIOS ? 60 : 84;
-  const TAB_BAR_PADDING_BOTTOM = isAndroid ? insets.bottom + 6 : isIOS ? 0 : 34;
+  // 1. Establish a clear base height for the interactive content area (icons + text)
+  const BASE_CONTENT_HEIGHT = 54;
+
+  // 2. Determine padding needed above system bars. If no inset exists, give it a tiny breath room (8px).
+  const TAB_BAR_PADDING_BOTTOM = insets.bottom > 0 ? insets.bottom : 8;
+
+  // 3. Total height is the content space + the safety padding at the bottom + top spacing
+  const TAB_BAR_HEIGHT = BASE_CONTENT_HEIGHT + TAB_BAR_PADDING_BOTTOM + 8;
 
   return (
     <Tabs
@@ -105,3 +110,4 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+

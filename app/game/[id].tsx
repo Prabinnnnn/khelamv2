@@ -130,7 +130,7 @@ export default function GameDetailScreen() {
         <View style={styles.hero}>
           <View style={[styles.heroPlaceholder, { backgroundColor: "#1A1A1A" }]}>
             <Text style={styles.heroEmoji}>
-              {game.sport === "Futsal" ? "⚽" : game.sport === "Football" ? "🏈" : game.sport === "Cricket" ? "🏏" : "🏆"}
+              {game.sport === "Futsal" ? "🥅" : game.sport === "Football" ? "⚽" : game.sport === "Cricket" ? "🏏" : "🏆"}
             </Text>
             <View style={styles.heroGradient} />
           </View>
@@ -366,8 +366,8 @@ export default function GameDetailScreen() {
               {game.status === "full"
                 ? "Game is Full"
                 : game.status === "locked"
-                ? "Game Locked"
-                : `Join Game · NPR ${game.price}`}
+                  ? "Game Locked"
+                  : `Join Game · NPR ${game.price}`}
             </Text>
           </TouchableOpacity>
         )}

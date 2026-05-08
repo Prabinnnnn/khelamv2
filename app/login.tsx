@@ -127,20 +127,6 @@ export default function LoginScreen() {
             >
               <Text style={styles.btnText}>{loading ? "Logging in..." : "Log In"}</Text>
             </TouchableOpacity>
-
-            <View style={styles.dividerRow}>
-              <View style={[styles.line, { backgroundColor: "#2E2E2E" }]} />
-              <Text style={styles.orText}>or</Text>
-              <View style={[styles.line, { backgroundColor: "#2E2E2E" }]} />
-            </View>
-
-            <TouchableOpacity
-              style={[styles.btnGoogle, { backgroundColor: "#1A1A1A", borderColor: "#2E2E2E" }]}
-              activeOpacity={0.85}
-            >
-              <Text style={[styles.gIcon]}>G</Text>
-              <Text style={[styles.btnGoogleText, { color: "#FFF" }]}>Continue with Google</Text>
-            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
@@ -208,19 +194,5 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   btnText: { fontSize: 16, fontWeight: "800", color: "#0D0D0D" },
-  dividerRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  line: { flex: 1, height: 1 },
-  orText: { color: "#9E9E9E", fontSize: 13 },
-  btnGoogle: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 14,
-    borderRadius: 100,
-    borderWidth: 1,
-  },
-  gIcon: { fontSize: 15, fontWeight: "900", color: "#FFF" },
-  btnGoogleText: { fontSize: 15, fontWeight: "600" },
   signupRow: { alignItems: "center", marginTop: 24 },
 });

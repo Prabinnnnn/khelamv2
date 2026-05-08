@@ -1,9 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import {
-  Image,
-  ImageBackground,
   Platform,
   StatusBar,
   StyleSheet,
@@ -32,7 +29,7 @@ export default function WelcomeScreen() {
 
       {/* Sport thumbnails grid (decorative) */}
       <View style={styles.thumbnailGrid}>
-        {["⚽", "🏀", "🏏", "🏸", "🎮", "🏐"].map((emoji, i) => (
+        {["🥅", "⚽", "🏀", "🏏", "🏸", "🎮", "🏐"].map((emoji, i) => (
           <View
             key={i}
             style={[
@@ -70,22 +67,6 @@ export default function WelcomeScreen() {
           <Text style={styles.tagline}>Find your game. Join the squad.</Text>
         </View>
 
-        {/* Stats row */}
-        <View style={styles.statsRow}>
-          {[
-            { value: "2K+", label: "Players" },
-            { value: "150+", label: "Games/Week" },
-            { value: "8", label: "Cities" },
-          ].map((stat, i) => (
-            <View key={i} style={styles.stat}>
-              <Text style={[styles.statValue, { color: "#C8F248" }]}>
-                {stat.value}
-              </Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* CTA Buttons */}
         <View style={styles.buttons}>
           <TouchableOpacity
@@ -106,20 +87,6 @@ export default function WelcomeScreen() {
             <Text style={[styles.btnOutlineText, { color: "#FFFFFF" }]}>
               Log In
             </Text>
-          </TouchableOpacity>
-
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, { backgroundColor: "#2E2E2E" }]} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={[styles.dividerLine, { backgroundColor: "#2E2E2E" }]} />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.btnGoogle, { backgroundColor: "#1A1A1A", borderColor: "#2E2E2E" }]}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.btnGoogleText}>Continue with Google</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -181,7 +148,6 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(13,13,13,0.55)",
-    backgroundImage: undefined,
   },
   content: {
     flex: 1,
@@ -216,20 +182,6 @@ const styles = StyleSheet.create({
     color: "#9E9E9E",
     textAlign: "center",
   },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 40,
-    backgroundColor: "#1A1A1A",
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    borderWidth: 1,
-    borderColor: "#2E2E2E",
-  },
-  stat: { alignItems: "center", gap: 2 },
-  statValue: { fontSize: 22, fontWeight: "800" },
-  statLabel: { fontSize: 12, color: "#9E9E9E" },
   buttons: { gap: 12 },
   btnPrimary: {
     paddingVertical: 16,
@@ -250,31 +202,5 @@ const styles = StyleSheet.create({
   btnOutlineText: {
     fontSize: 16,
     fontWeight: "700",
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  dividerLine: { flex: 1, height: 1 },
-  dividerText: { color: "#9E9E9E", fontSize: 13 },
-  btnGoogle: {
-    paddingVertical: 14,
-    borderRadius: 100,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 10,
-    borderWidth: 1,
-  },
-  googleIcon: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#FFFFFF",
-  },
-  btnGoogleText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#FFFFFF",
   },
 });

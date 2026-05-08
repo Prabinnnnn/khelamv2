@@ -13,8 +13,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 
 const SPORTS = [
-  { name: "Futsal", emoji: "⚽" },
-  { name: "Football", emoji: "🏈" },
+  { name: "Futsal", emoji: "🥅" },
+  { name: "Football", emoji: "⚽" },
   { name: "Volleyball", emoji: "🏐" },
   { name: "Cricket", emoji: "🏏" },
   { name: "Basketball", emoji: "🏀" },

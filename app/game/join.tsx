@@ -74,7 +74,7 @@ export default function JoinGameScreen() {
         <View style={[styles.summaryCard, { backgroundColor: "#1A1A1A" }]}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <Text style={{ fontSize: 32 }}>
-              {game.sport === "Futsal" ? "⚽" : game.sport === "Cricket" ? "🏏" : "🏆"}
+              {game.sport === "Futsal" ? "🥅" : game.sport === "Cricket" ? "🏏" : "🏆"}
             </Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.summaryTitle}>{game.title}</Text>

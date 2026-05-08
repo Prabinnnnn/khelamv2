@@ -64,8 +64,8 @@ export function GameCard({ game, isJoined, onPress, isPast }: GameCardProps) {
   const sportColor = sportColors[game.sport] || colors.primary;
 
   const sportIcons: Record<string, string> = {
-    Futsal: "⚽",
-    Football: "🏈",
+    Futsal: "🥅",
+    Football: "⚽",
     Cricket: "🏏",
     Basketball: "🏀",
     Badminton: "🏸",
