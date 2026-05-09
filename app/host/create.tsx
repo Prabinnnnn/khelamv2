@@ -84,7 +84,7 @@ export default function CreateGameScreen() {
     Alert.alert(
       "Game Published!",
       "Your game is now live on Khelam.",
-      [{ text: "View Dashboard", onPress: () => router.replace("/host/dashboard") }]
+      [{ text: "View Dashboard", onPress: () => router.replace("/host") }]
     );
   };
 

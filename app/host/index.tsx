@@ -218,7 +218,7 @@ export default function BecomeHostScreen() {
             </Text>
             <TouchableOpacity
               style={[styles.applyBtn, { backgroundColor: "#C8F248" }]}
-              onPress={() => router.push("/host/dashboard")}
+              onPress={() => router.push("/(tabs)/host")}
             >
               <Text style={styles.applyBtnText}>Go to Host Dashboard</Text>
             </TouchableOpacity>

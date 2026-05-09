@@ -23,7 +23,22 @@ export default function HostTab() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { hostedGames } = useGames();
+  const [activeTab, setActiveTab] = React.useState<"Upcoming" | "Hosted" | "Cancelled">("Upcoming");
+
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+
+  const stats = {
+    upcoming: hostedGames.filter((g) => ["open", "full", "locked"].includes(g.status)).length,
+    hosted: hostedGames.filter((g) => g.status === "completed").length,
+    cancelled: hostedGames.filter((g) => g.status === "cancelled").length,
+  };
+
+  const filteredGames = hostedGames.filter((g) => {
+    if (activeTab === "Upcoming") return ["open", "full", "locked"].includes(g.status);
+    if (activeTab === "Hosted") return g.status === "completed";
+    if (activeTab === "Cancelled") return g.status === "cancelled";
+    return true;
+  });
 
   const status = user?.hostStatus ?? "not_applied";
 
@@ -116,7 +131,7 @@ export default function HostTab() {
         <View style={{ flex: 1 }}>
           <Text style={[styles.title, { color: colors.foreground }]}>Host Dashboard</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-            Your games & earnings
+            Manage your hosted games
           </Text>
         </View>
         <View style={[styles.verifiedBadge, { backgroundColor: "#22C55E22" }]}>
@@ -128,72 +143,59 @@ export default function HostTab() {
       {/* Stats */}
       <View style={styles.statsRow}>
         {[
-          { value: hostedGames.length, label: "Games", icon: "trophy-outline" as const },
-          {
-            value: hostedGames.reduce((s, g) => s + g.filledSlots, 0),
-            label: "Players",
-            icon: "people-outline" as const,
-          },
-          {
-            value: `NPR ${hostedGames.reduce((s, g) => s + g.price * g.filledSlots, 0)}`,
-            label: "Earned",
-            icon: "cash-outline" as const,
-          },
+          { value: stats.upcoming, label: "Upcoming", icon: "calendar-outline" as const },
+          { value: stats.hosted, label: "Hosted", icon: "checkmark-done-outline" as const },
+          { value: stats.cancelled, label: "Cancelled", icon: "close-circle-outline" as const },
         ].map((s, i) => (
           <View
             key={i}
             style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}
           >
-            <Ionicons name={s.icon} size={16} color="#1A1A1A" />
+            <Ionicons name={s.icon} size={18} color="#C8F248" />
             <Text style={[styles.statValue, { color: colors.foreground }]}>{s.value}</Text>
             <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{s.label}</Text>
           </View>
         ))}
       </View>
 
+      {/* Tabs */}
+      <View style={[styles.tabsContainer, { borderBottomColor: colors.border }]}>
+        {["Upcoming", "Hosted", "Cancelled"].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[
+              styles.tabBtn,
+              activeTab === tab && { borderBottomColor: "#C8F248", borderBottomWidth: 2 },
+            ]}
+            onPress={() => setActiveTab(tab as any)}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                { color: activeTab === tab ? colors.foreground : colors.mutedForeground },
+                activeTab === tab && { fontWeight: "700" },
+              ]}
+            >
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <FlatList
-        data={hostedGames}
+        data={filteredGames}
         keyExtractor={(g) => g.id}
         contentContainerStyle={[
           styles.list,
-          { paddingBottom: insets.bottom + 120 },
+          { paddingBottom: insets.bottom + 120, paddingTop: 16 },
         ]}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <Text style={[styles.listHeader, { color: colors.mutedForeground }]}>
-            {hostedGames.length > 0 ? `${hostedGames.length} Hosted Games` : "No hosted games yet"}
-          </Text>
-        }
+        ListHeaderComponent={null}
         renderItem={({ item }) => (
-          <View>
-            <GameCard
-              game={item}
-              onPress={() => router.push(`/game/${item.id}`)}
-            />
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={[
-                  styles.actionBtn,
-                  { backgroundColor: colors.card, borderColor: colors.border },
-                ]}
-                onPress={() => router.push(`/host/create?editId=${item.id}`)}
-              >
-                <Ionicons name="pencil-outline" size={14} color={colors.foreground} />
-                <Text style={[styles.actionText, { color: colors.foreground }]}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.actionBtn,
-                  { backgroundColor: colors.card, borderColor: colors.border },
-                ]}
-              >
-                <Ionicons name="people-outline" size={14} color={colors.foreground} />
-                <Text style={[styles.actionText, { color: colors.foreground }]}>
-                  {item.filledSlots}/{item.slots} Players
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <GameCard
+            game={item}
+            onPress={() => router.push(`/game/${item.id}`)}
+          />
         )}
         ListEmptyComponent={
           <EmptyState
@@ -296,7 +298,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
   },
-  statValue: { fontSize: 15, fontWeight: "800" },
+  statValue: { fontSize: 16, fontWeight: "800" },
   statLabel: { fontSize: 10, textAlign: "center" },
   list: { paddingHorizontal: 20 },
   listHeader: {
@@ -306,17 +308,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 12,
   },
-  actionRow: { flexDirection: "row", gap: 10, marginTop: -4, marginBottom: 16 },
-  actionBtn: {
+  tabsContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 100,
-    borderWidth: 1,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    marginTop: 8,
   },
-  actionText: { fontSize: 13, fontWeight: "600" },
+  tabBtn: {
+    paddingVertical: 12,
+    marginRight: 24,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
   fab: {
     position: "absolute",
     right: 20,

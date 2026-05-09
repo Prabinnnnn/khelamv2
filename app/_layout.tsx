@@ -36,7 +36,6 @@ function RootLayoutNav() {
       <Stack.Screen name="game/[id]" />
       <Stack.Screen name="game/join" />
       <Stack.Screen name="host/index" />
-      <Stack.Screen name="host/dashboard" />
       <Stack.Screen name="host/create" />
       <Stack.Screen name="notifications" />
     </Stack>
