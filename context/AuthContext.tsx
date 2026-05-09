@@ -6,12 +6,14 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  address: string;
   city: string;
   sport: string;
   avatar: string;
   memberSince: string;
   isHost: boolean;
   hostStatus: "not_applied" | "pending" | "verified";
+  hostId?: string;
   gamesPlayed: number;
   gamesHosted: number;
   walletBalance: number;
@@ -37,12 +39,14 @@ const DEFAULT_USER: User = {
   name: "Aarav Shrestha",
   email: "aarav@example.com",
   phone: "+977 9841234567",
+  address: "Kathmandu, Nepal",
   city: "Kathmandu",
   sport: "Futsal",
   avatar: "",
   memberSince: "May 2024",
   isHost: false,
   hostStatus: "not_applied",
+  hostId: "host_aarav",
   gamesPlayed: 14,
   gamesHosted: 2,
   walletBalance: 500,

@@ -30,19 +30,39 @@ export default function ProfileScreen() {
   if (!user) return null;
 
   const accountRows: MenuRow[] = [
-    { icon: "person-outline", label: "Edit Profile" },
-    { icon: "lock-closed-outline", label: "Change Password" },
+    {
+      icon: "person-outline",
+      label: "Update ID Documents",
+      onPress: () => router.push("/profile/update-id"),
+    },
+    {
+      icon: "lock-closed-outline",
+      label: "Change Password",
+      onPress: () => router.push("/profile/change-password"),
+    },
     {
       icon: "notifications-outline",
-      label: "Notifications",
-      onPress: () => router.push("/notifications"),
+      label: "Notification Settings",
+      onPress: () => router.push("/profile/notification-settings"),
     },
   ];
 
   const supportRows: MenuRow[] = [
-    { icon: "help-circle-outline", label: "Help & Support" },
-    { icon: "document-text-outline", label: "Terms & Privacy" },
-    { icon: "information-circle-outline", label: "About Khelam" },
+    {
+      icon: "help-circle-outline",
+      label: "Help & Support",
+      onPress: () => router.push("/profile/help-support"),
+    },
+    {
+      icon: "document-text-outline",
+      label: "Terms & Privacy",
+      onPress: () => router.push("/profile/terms-privacy"),
+    },
+    {
+      icon: "information-circle-outline",
+      label: "About Khelam",
+      onPress: () => router.push("/profile/about"),
+    },
   ];
 
   const handleLogout = async () => {
@@ -80,7 +100,10 @@ export default function ProfileScreen() {
               Member since {user.memberSince}
             </Text>
           </View>
-          <TouchableOpacity style={[styles.editBtn, { borderColor: colors.border }]}>
+          <TouchableOpacity
+            style={[styles.editBtn, { borderColor: colors.border }]}
+            onPress={() => router.push("/profile/edit-details")}
+          >
             <Ionicons name="pencil-outline" size={16} color={colors.foreground} />
           </TouchableOpacity>
         </View>
