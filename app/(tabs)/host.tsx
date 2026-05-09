@@ -194,7 +194,7 @@ export default function HostTab() {
         renderItem={({ item }) => (
           <GameCard
             game={item}
-            onPress={() => router.push(`/game/${item.id}`)}
+            onPress={() => router.push(`/host/game/${item.id}`)}
           />
         )}
         ListEmptyComponent={
