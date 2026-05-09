@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import authApi, { RegisterData } from "../api/auth";
 
 export interface User {
   id: string;
@@ -23,7 +24,8 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (user: User) => Promise<void>;
+  login: (credentials: { email?: string; phone?: string; password?: string }) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<void>;
   selectedCity: string;
@@ -64,12 +66,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUser = async () => {
     try {
-      const stored = await AsyncStorage.getItem("khelam_user");
-      if (stored) {
-        const parsed = JSON.parse(stored);
+      const [storedUser, token] = await Promise.all([
+        AsyncStorage.getItem("khelam_user"),
+        AsyncStorage.getItem("khelam_token")
+      ]);
+
+      if (storedUser && token) {
+        const parsed = JSON.parse(storedUser);
+        
+        const cityName = typeof parsed.city === 'object' && parsed.city !== null 
+          ? (parsed.city as any).name 
+          : parsed.city;
+
         setUser(parsed);
-        setSelectedCityState(parsed.city || "Kathmandu");
+        setSelectedCityState(cityName || "Kathmandu");
         setSelectedSportState(parsed.sport || "Futsal");
+        
+        // Optional: Refresh profile from backend to ensure data is fresh
+        try {
+          const freshUser = await authApi.getProfile();
+          
+          const freshCityName = typeof freshUser.city === 'object' && freshUser.city !== null 
+            ? (freshUser.city as any).name 
+            : freshUser.city;
+
+          setUser(freshUser);
+          setSelectedCityState(freshCityName || "Kathmandu");
+          await AsyncStorage.setItem("khelam_user", JSON.stringify(freshUser));
+        } catch (err) {
+          console.log("Failed to refresh profile:", err);
+        }
       }
     } catch (e) {
       // ignore
@@ -78,21 +104,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (userData: User) => {
-    await AsyncStorage.setItem("khelam_user", JSON.stringify(userData));
-    setUser(userData);
-    setSelectedCityState(userData.city);
-    setSelectedSportState(userData.sport);
+  const login = async (credentials: { email?: string; phone?: string; password?: string }) => {
+    const data = await authApi.login(credentials);
+    await Promise.all([
+      AsyncStorage.setItem("khelam_token", data.access),
+      AsyncStorage.setItem("khelam_refresh_token", data.refresh),
+      AsyncStorage.setItem("khelam_user", JSON.stringify(data.user))
+    ]);
+    
+    // Handle city if it's an object {id, name, state, country}
+    const cityName = typeof data.user.city === 'object' && data.user.city !== null 
+      ? (data.user.city as any).name 
+      : data.user.city;
+
+    setUser(data.user);
+    setSelectedCityState(cityName || "Kathmandu");
+    setSelectedSportState(data.user.sport || "Futsal");
+  };
+
+  const register = async (registerData: RegisterData) => {
+    const data = await authApi.register(registerData);
+    await Promise.all([
+      AsyncStorage.setItem("khelam_token", data.access),
+      AsyncStorage.setItem("khelam_refresh_token", data.refresh),
+      AsyncStorage.setItem("khelam_user", JSON.stringify(data.user))
+    ]);
+
+    const cityName = typeof data.user.city === 'object' && data.user.city !== null 
+      ? (data.user.city as any).name 
+      : data.user.city;
+
+    setUser(data.user);
+    setSelectedCityState(cityName || "Kathmandu");
+    setSelectedSportState(data.user.sport || "Futsal");
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem("khelam_user");
+    await Promise.all([
+      AsyncStorage.removeItem("khelam_user"),
+      AsyncStorage.removeItem("khelam_token"),
+      AsyncStorage.removeItem("khelam_refresh_token")
+    ]);
     setUser(null);
   };
 
   const updateUser = async (updates: Partial<User>) => {
     if (!user) return;
-    const updated = { ...user, ...updates };
+    const updated = await authApi.updateProfile(updates);
     await AsyncStorage.setItem("khelam_user", JSON.stringify(updated));
     setUser(updated);
   };
@@ -114,6 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         login,
+        register,
         logout,
         updateUser,
         selectedCity,
@@ -134,3 +193,4 @@ export function useAuth() {
 }
 
 export { DEFAULT_USER };
+

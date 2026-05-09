@@ -34,10 +34,14 @@ export default function LoginScreen() {
     }
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 1000));
-    await login({ ...DEFAULT_USER, email });
-    setLoading(false);
-    router.replace("/(tabs)/discover");
+    try {
+      await login({ email, password });
+      router.replace("/(tabs)/discover");
+    } catch (err: any) {
+      setError(err.message || "Invalid credentials. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

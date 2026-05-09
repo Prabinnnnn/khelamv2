@@ -15,8 +15,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function SignupScreen() {
   const insets = useSafeAreaInsets();
+  const { register } = useAuth();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,6 +30,7 @@ export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
 
   const validateStep1 = () => {
     const e: Record<string, string> = {};
@@ -49,7 +53,7 @@ export default function SignupScreen() {
     return Object.keys(e).length === 0;
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (step === 1) {
       if (validateStep1()) {
         setErrors({});
@@ -57,7 +61,36 @@ export default function SignupScreen() {
       }
     } else {
       if (validateStep2()) {
-        router.push("/otp");
+        setLoading(true);
+        try {
+          await register({ name, email, phone, password });
+          router.replace("/city-select");
+        } catch (err: any) {
+          if (err.response?.data) {
+            const backendErrors = err.response.data;
+            // Map backend errors to local state (Django returns arrays, we take the first message)
+            const mappedErrors: Record<string, string> = {};
+            Object.keys(backendErrors).forEach(key => {
+              mappedErrors[key] = Array.isArray(backendErrors[key]) 
+                ? backendErrors[key][0] 
+                : backendErrors[key];
+            });
+            
+            setErrors(mappedErrors);
+
+            // Determine if we need to switch back to step 1 for an error there
+            if (mappedErrors.email || mappedErrors.phone || mappedErrors.name) {
+              setStep(1);
+            }
+
+            const combinedMessage = Object.values(backendErrors).flat().join("\n");
+            Alert.alert("Signup Error", combinedMessage);
+          } else {
+            Alert.alert("Signup Failed", err.message || "Could not create account. Please try again.");
+          }
+        } finally {
+          setLoading(false);
+        }
       }
     }
   };
@@ -267,14 +300,15 @@ export default function SignupScreen() {
             )}
 
             <TouchableOpacity
-              style={[styles.btnPrimary, { backgroundColor: "#C8F248" }]}
+              style={[styles.btnPrimary, { backgroundColor: loading ? "#A0C43A" : "#C8F248", opacity: loading ? 0.7 : 1 }]}
               onPress={handleContinue}
+              disabled={loading}
               activeOpacity={0.85}
             >
               <Text style={styles.btnText}>
-                {step === 2 ? "Verify OTP" : "Continue"}
+                {loading ? "Creating account..." : step === 2 ? "Register" : "Continue"}
               </Text>
-              <Ionicons name="arrow-forward" size={18} color="#0D0D0D" />
+              {!loading && <Ionicons name="arrow-forward" size={18} color="#0D0D0D" />}
             </TouchableOpacity>
           </View>
 
