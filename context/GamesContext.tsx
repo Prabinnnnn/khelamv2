@@ -640,10 +640,12 @@ interface GamesContextType {
   hostedGames: Game[];
   joinedGameIds: string[];
   pastGameIds: string[];
+  draftGame: Game | null;
   joinGame: (gameId: string) => Promise<void>;
   leaveGame: (gameId: string) => Promise<void>;
   getGame: (id: string) => Game | undefined;
   addHostedGame: (game: Game) => void;
+  setDraftGame: (game: Game | null) => void;
 }
 
 const GamesContext = createContext<GamesContextType | null>(null);
@@ -652,6 +654,7 @@ export function GamesProvider({ children }: { children: React.ReactNode }) {
   const [joinedGameIds, setJoinedGameIds] = useState<string[]>([]);
   const [pastGameIds] = useState<string[]>(["pg1"]);
   const [hostedGames, setHostedGames] = useState<Game[]>(HOSTED_GAMES);
+  const [draftGame, setDraftGame] = useState<Game | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem("khelam_joined_games").then((val) => {
@@ -686,10 +689,12 @@ export function GamesProvider({ children }: { children: React.ReactNode }) {
         hostedGames,
         joinedGameIds,
         pastGameIds,
+        draftGame,
         joinGame,
         leaveGame,
         getGame,
         addHostedGame,
+        setDraftGame,
       }}
     >
       {children}

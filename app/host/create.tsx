@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StatusBar,
@@ -22,31 +23,133 @@ import { useColors } from "@/hooks/useColors";
 
 const SPORTS = ["Futsal", "Football", "Cricket", "Basketball", "Badminton", "Volleyball", "E-Sports"];
 
+function toDateString(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function formatDateForDisplay(dateStr: string): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr + "T00:00:00");
+  const options: Intl.DateTimeFormatOptions = { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric' 
+  };
+  return date.toLocaleDateString('en-US', options);
+}
+
+function formatTimeForDisplay(timeStr: string): string {
+  if (!timeStr) return "";
+  // Assume timeStr is in format like "6:00 PM"
+  return timeStr;
+}
+
+function validateDuration(value: number): string | null {
+  if (value < 1) return "Minimum 1 minute";
+  if (value > 300) return "Maximum 300 minutes";
+  return null;
+}
+
+function validateFormat(value: number): string | null {
+  if (value < 1) return "Minimum 1 player";
+  if (value > 15) return "Maximum 15 players";
+  return null;
+}
+
 export default function CreateGameScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { addHostedGame } = useGames();
+  const { addHostedGame, draftGame, setDraftGame } = useGames();
 
   const [sport, setSport] = useState("Futsal");
   const [venue, setVenue] = useState("");
   const [address, setAddress] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [duration, setDuration] = useState("60 min");
-  const [format, setFormat] = useState("5 vs 5");
+  const [duration, setDuration] = useState<number>(60);
+  const [formatLeft, setFormatLeft] = useState("5");
+  const [formatRight, setFormatRight] = useState("5");
   const [slots, setSlots] = useState("10");
   const [price, setPrice] = useState("");
   const [rules, setRules] = useState("");
   const [notes, setNotes] = useState("");
   const [isIndoor, setIsIndoor] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [durationError, setDurationError] = useState<string | null>(null);
 
-  const handlePublish = async () => {
-    if (!venue || !date || !time || !price) {
-      Alert.alert("Required", "Please fill in venue, date, time, and price.");
+  // Pre-fill from draft if exists
+  React.useEffect(() => {
+    if (draftGame) {
+      setSport(draftGame.sport);
+      setVenue(draftGame.venue);
+      setAddress(draftGame.address);
+      setDate(draftGame.date);
+      setTime(draftGame.time);
+      setDuration(parseInt(draftGame.duration.split(' ')[0]) || 60);
+      const [left, right] = draftGame.format.split(' vs ');
+      setFormatLeft(left || "5");
+      setFormatRight(right || "5");
+      setSlots(String(draftGame.slots));
+      setPrice(String(draftGame.price));
+      setRules(draftGame.rules);
+      setNotes(draftGame.notes);
+      setIsIndoor(draftGame.isIndoor);
+    }
+  }, [draftGame]);
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const handleDurationChange = (value: string) => {
+    const sanitized = value.replace(/[^0-9]/g, "");
+    const numeric = sanitized === "" ? 0 : parseInt(sanitized, 10);
+    setDuration(numeric);
+    setDurationError(validateDuration(numeric));
+  };
+
+  const handleFormatChange = (side: "left" | "right") => (value: string) => {
+    const sanitized = value.replace(/[^0-9]/g, "");
+    const numeric = sanitized === "" ? 0 : parseInt(sanitized, 10);
+    const constrained = numeric > 15 ? "15" : sanitized;
+
+    if (side === "left") {
+      setFormatLeft(constrained);
+    } else {
+      setFormatRight(constrained);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!venue || !date || !time || !price || duration < 1) {
+      Alert.alert("Required", "Please fill in venue, date, time, duration, and price.");
       return;
     }
+
+    const durationValidation = validateDuration(duration);
+    if (durationValidation) {
+      Alert.alert("Invalid Duration", durationValidation);
+      return;
+    }
+
+    const leftNumber = parseInt(formatLeft, 10);
+    const rightNumber = parseInt(formatRight, 10);
+    if (
+      isNaN(leftNumber) ||
+      isNaN(rightNumber) ||
+      validateFormat(leftNumber) ||
+      validateFormat(rightNumber)
+    ) {
+      Alert.alert(
+        "Invalid Format",
+        "Please enter both team sizes between 1 and 15 for the game format."
+      );
+      return;
+    }
+
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
 
@@ -57,10 +160,10 @@ export default function CreateGameScreen() {
       venue,
       address,
       date,
-      dateLabel: date,
+      dateLabel: formatDateForDisplay(date),
       time,
-      duration,
-      format,
+      duration: `${duration} min`,
+      format: `${parseInt(formatLeft, 10)} vs ${parseInt(formatRight, 10)}`,
       slots: parseInt(slots) || 10,
       filledSlots: 0,
       price: parseInt(price) || 0,
@@ -78,14 +181,9 @@ export default function CreateGameScreen() {
       city: user?.city ?? "Kathmandu",
     };
 
-    addHostedGame(newGame);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setDraftGame(newGame);
     setLoading(false);
-    Alert.alert(
-      "Game Published!",
-      "Your game is now live on Khelam.",
-      [{ text: "View Dashboard", onPress: () => router.replace("/host") }]
-    );
+    router.push("/host/review");
   };
 
   return (
@@ -186,45 +284,73 @@ export default function CreateGameScreen() {
           <SectionTitle title="Date & Time" colors={colors} />
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <FormField
-                icon="calendar-outline"
-                placeholder="Date (e.g. May 15)"
-                value={date}
-                onChangeText={setDate}
-                colors={colors}
-              />
+              <TouchableOpacity
+                style={[styles.inputWrap, { backgroundColor: colors.card, borderColor: colors.border }]}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Ionicons name="calendar-outline" size={16} color={colors.mutedForeground} />
+                <Text style={[styles.input, { color: date ? colors.foreground : colors.mutedForeground }]}>
+                  {date ? formatDateForDisplay(date) : "Select date"}
+                </Text>
+                <Ionicons name="chevron-down" size={14} color={colors.mutedForeground} />
+              </TouchableOpacity>
             </View>
             <View style={{ flex: 1 }}>
-              <FormField
-                icon="time-outline"
-                placeholder="Time (e.g. 6:00 PM)"
-                value={time}
-                onChangeText={setTime}
-                colors={colors}
-              />
+              <TouchableOpacity
+                style={[styles.inputWrap, { backgroundColor: colors.card, borderColor: colors.border }]}
+                onPress={() => setShowTimePicker(true)}
+              >
+                <Ionicons name="time-outline" size={16} color={colors.mutedForeground} />
+                <Text style={[styles.input, { color: time ? colors.foreground : colors.mutedForeground }]}>
+                  {time ? formatTimeForDisplay(time) : "Select time"}
+                </Text>
+                <Ionicons name="chevron-down" size={14} color={colors.mutedForeground} />
+              </TouchableOpacity>
             </View>
           </View>
 
           {/* Duration & Format */}
-          <SectionTitle title="Format" colors={colors} />
+          <SectionTitle title="Duration & Format" colors={colors} />
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <FormField
-                icon="hourglass-outline"
-                placeholder="Duration"
-                value={duration}
-                onChangeText={setDuration}
-                colors={colors}
-              />
+              <View style={styles.durationRow}>
+                <View style={{ flex: 1 }}>
+                  <FormField
+                    icon="hourglass-outline"
+                    placeholder="Duration"
+                    value={duration > 0 ? String(duration) : ""}
+                    onChangeText={handleDurationChange}
+                    keyboardType="number-pad"
+                    colors={colors}
+                  />
+                </View>
+                <Text style={[styles.minLabel, { color: colors.mutedForeground }]}>min</Text>
+              </View>
             </View>
             <View style={{ flex: 1 }}>
-              <FormField
-                icon="people-outline"
-                placeholder="Format (5 vs 5)"
-                value={format}
-                onChangeText={setFormat}
-                colors={colors}
-              />
+              <View style={styles.formatSplitRow}>
+                <View style={{ flex: 1 }}>
+                  <FormField
+                    icon="people-outline"
+                    placeholder="5"
+                    value={formatLeft}
+                    onChangeText={handleFormatChange("left")}
+                    keyboardType="number-pad"
+                    colors={colors}
+                  />
+                </View>
+                <Text style={[styles.vsLabel, { color: colors.mutedForeground }]}>vs</Text>
+                <View style={{ flex: 1 }}>
+                  <FormField
+                    icon="people-outline"
+                    placeholder="5"
+                    value={formatRight}
+                    onChangeText={handleFormatChange("right")}
+                    keyboardType="number-pad"
+                    colors={colors}
+                  />
+                </View>
+              </View>
             </View>
           </View>
 
@@ -290,16 +416,293 @@ export default function CreateGameScreen() {
 
           <TouchableOpacity
             style={[styles.publishBtn, { backgroundColor: loading ? "#A0C43A" : "#C8F248" }]}
-            onPress={handlePublish}
+            onPress={handleSubmit}
             disabled={loading}
             activeOpacity={0.85}
           >
-            <Ionicons name="rocket-outline" size={20} color="#0D0D0D" />
-            <Text style={styles.publishText}>{loading ? "Publishing..." : "Publish Game"}</Text>
+            <Ionicons name="send-outline" size={20} color="#0D0D0D" />
+            <Text style={styles.publishText}>{loading ? "Submitting..." : "Submit"}</Text>
           </TouchableOpacity>
         </ScrollView>
+
+        {/* Date Picker Modal */}
+        <DatePickerModal
+          visible={showDatePicker}
+          selectedDate={date}
+          onSelectDate={setDate}
+          onClose={() => setShowDatePicker(false)}
+          colors={colors}
+          insets={insets}
+        />
+
+        {/* Time Picker Modal */}
+        <TimePickerModal
+          visible={showTimePicker}
+          selectedTime={time}
+          onSelectTime={setTime}
+          onClose={() => setShowTimePicker(false)}
+          colors={colors}
+          insets={insets}
+        />
       </KeyboardAvoidingView>
     </View>
+  );
+}
+
+function DatePickerModal({
+  visible,
+  selectedDate,
+  onSelectDate,
+  onClose,
+  colors,
+  insets,
+}: {
+  visible: boolean;
+  selectedDate: string;
+  onSelectDate: (date: string) => void;
+  onClose: () => void;
+  colors: ReturnType<typeof useColors>;
+  insets: ReturnType<typeof useSafeAreaInsets>;
+}) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const maxDate = new Date(today);
+  maxDate.setMonth(maxDate.getMonth() + 3);
+
+  const [calMonth, setCalMonth] = React.useState(() => {
+    if (selectedDate) {
+      const date = new Date(selectedDate + "T00:00:00");
+      return new Date(date.getFullYear(), date.getMonth(), 1);
+    }
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+
+  const bottomInset = insets.bottom > 0 ? insets.bottom : 8;
+
+  const goToPrevMonth = () => {
+    const prev = new Date(calMonth);
+    prev.setMonth(prev.getMonth() - 1);
+    const minMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    if (prev >= minMonth) setCalMonth(prev);
+  };
+
+  const goToNextMonth = () => {
+    const next = new Date(calMonth);
+    next.setMonth(next.getMonth() + 1);
+    const maxMonth = new Date(today.getFullYear(), today.getMonth() + 3, 1);
+    if (next <= maxMonth) setCalMonth(next);
+  };
+
+  const calDays = React.useMemo(() => {
+    const year = calMonth.getFullYear();
+    const month = calMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDow = firstDay.getDay();
+    const offset = startDow === 0 ? 6 : startDow - 1;
+    const days: (Date | null)[] = [];
+    for (let i = 0; i < offset; i++) days.push(null);
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      days.push(new Date(year, month, d));
+    }
+    while (days.length % 7 !== 0) days.push(null);
+    return days;
+  }, [calMonth]);
+
+  const handleDayPress = (day: Date) => {
+    if (day < today || day > maxDate) return;
+    const dateStr = toDateString(day);
+    onSelectDate(dateStr);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onClose();
+  };
+
+  const isSelected = (day: Date | null): boolean => {
+    if (!day || !selectedDate) return false;
+    return toDateString(day) === selectedDate;
+  };
+
+  const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+  const DAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
+        <TouchableOpacity
+          activeOpacity={1}
+          style={[styles.sheet, { backgroundColor: colors.background, paddingBottom: bottomInset + 16 }]}
+        >
+          <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
+          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Select Date</Text>
+
+          <View style={[calStyles.calContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            {/* Month nav */}
+            <View style={calStyles.monthNav}>
+              <TouchableOpacity onPress={goToPrevMonth} style={calStyles.navBtn}>
+                <Ionicons name="chevron-back" size={18} color={colors.foreground} />
+              </TouchableOpacity>
+              <Text style={[calStyles.monthLabel, { color: colors.foreground }]}>
+                {MONTH_NAMES[calMonth.getMonth()]} {calMonth.getFullYear()}
+              </Text>
+              <TouchableOpacity onPress={goToNextMonth} style={calStyles.navBtn}>
+                <Ionicons name="chevron-forward" size={18} color={colors.foreground} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Day headers */}
+            <View style={calStyles.dayHeaderRow}>
+              {DAY_LABELS.map((d) => (
+                <Text key={d} style={[calStyles.dayHeaderText, { color: colors.mutedForeground }]}>{d}</Text>
+              ))}
+            </View>
+
+            {/* Day grid */}
+            <View style={calStyles.grid}>
+              {calDays.map((day, idx) => {
+                if (!day) {
+                  return <View key={`empty-${idx}`} style={calStyles.dayCell} />;
+                }
+                const isPast = day < today;
+                const isFuture = day > maxDate;
+                const disabled = isPast || isFuture;
+                const selected = isSelected(day);
+                const isToday = toDateString(day) === toDateString(today);
+
+                return (
+                  <TouchableOpacity
+                    key={toDateString(day)}
+                    style={[
+                      calStyles.dayCell,
+                      selected && { backgroundColor: "#C8F248" },
+                    ]}
+                    onPress={() => !disabled && handleDayPress(day)}
+                    activeOpacity={disabled ? 1 : 0.7}
+                  >
+                    <Text style={[
+                      calStyles.dayText,
+                      { color: disabled ? colors.border : selected ? "#0D0D0D" : colors.foreground },
+                      isToday && !selected && { color: "#C8F248", fontWeight: "700" },
+                    ]}>
+                      {day.getDate()}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={[calStyles.hint, { color: colors.mutedForeground }]}>
+              Select a date up to 3 months in the future
+            </Text>
+          </View>
+
+          {selectedDate && (
+            <TouchableOpacity
+              style={[styles.clearBtn, { borderColor: colors.border }]}
+              onPress={() => {
+                onSelectDate("");
+                onClose();
+              }}
+            >
+              <Text style={[styles.clearText, { color: colors.mutedForeground }]}>Clear date</Text>
+            </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
+
+function TimePickerModal({
+  visible,
+  selectedTime,
+  onSelectTime,
+  onClose,
+  colors,
+  insets,
+}: {
+  visible: boolean;
+  selectedTime: string;
+  onSelectTime: (time: string) => void;
+  onClose: () => void;
+  colors: ReturnType<typeof useColors>;
+  insets: ReturnType<typeof useSafeAreaInsets>;
+}) {
+  const bottomInset = insets.bottom > 0 ? insets.bottom : 8;
+
+  // Generate time slots from 4:00 AM to 12:00 AM (midnight) in 30-minute intervals
+  const timeSlots = React.useMemo(() => {
+    const slots: string[] = [];
+    for (let hour = 4; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        const timeStr = `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
+        slots.push(timeStr);
+      }
+    }
+    return slots;
+  }, []);
+
+  const handleTimeSelect = (timeStr: string) => {
+    onSelectTime(timeStr);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
+        <TouchableOpacity
+          activeOpacity={1}
+          style={[styles.sheet, { backgroundColor: colors.background, paddingBottom: bottomInset + 16 }]}
+        >
+          <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
+          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Select Time</Text>
+
+          <ScrollView
+            style={timeStyles.timeList}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={timeStyles.timeListContent}
+          >
+            {timeSlots.map((timeStr) => {
+              const isSelected = selectedTime === timeStr;
+              return (
+                <TouchableOpacity
+                  key={timeStr}
+                  style={[
+                    timeStyles.timeOption,
+                    {
+                      backgroundColor: isSelected ? "#C8F24820" : colors.card,
+                      borderColor: isSelected ? "#C8F248" : colors.border,
+                    },
+                  ]}
+                  onPress={() => handleTimeSelect(timeStr)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[timeStyles.timeText, { color: isSelected ? "#1A1A1A" : colors.foreground, fontWeight: isSelected ? "700" : "500" }]}>
+                    {timeStr}
+                  </Text>
+                  {isSelected && <Ionicons name="checkmark-circle" size={20} color="#1A1A1A" />}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {selectedTime && (
+            <TouchableOpacity
+              style={[styles.clearBtn, { borderColor: colors.border }]}
+              onPress={() => {
+                onSelectTime("");
+                onClose();
+              }}
+            >
+              <Text style={[styles.clearText, { color: colors.mutedForeground }]}>Clear time</Text>
+            </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
   );
 }
 
@@ -415,4 +818,128 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   publishText: { fontSize: 16, fontWeight: "800", color: "#0D0D0D" },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 20,
+    gap: 10,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 8,
+  },
+  sheetTitle: { fontSize: 18, fontWeight: "800" },
+  clearBtn: {
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  clearText: { fontSize: 14, fontWeight: "600" },
+  errorText: { fontSize: 12, marginTop: 4, fontWeight: "500" },
+  durationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  minLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    paddingBottom: 8,
+  },
+  formatSplitRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  vsLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    paddingBottom: 8,
+  },
+});
+
+const calStyles = StyleSheet.create({
+  calContainer: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 12,
+    marginTop: 4,
+  },
+  monthNav: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  navBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  monthLabel: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  dayHeaderRow: {
+    flexDirection: "row",
+    marginBottom: 4,
+  },
+  dayHeaderText: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  dayCell: {
+    width: `${100 / 7}%`,
+    aspectRatio: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 100,
+  },
+  dayText: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  hint: {
+    fontSize: 11,
+    textAlign: "center",
+    marginTop: 8,
+  },
+});
+
+const timeStyles = StyleSheet.create({
+  timeList: {
+    maxHeight: 300,
+  },
+  timeListContent: {
+    gap: 8,
+  },
+  timeOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  timeText: {
+    fontSize: 15,
+  },
 });
