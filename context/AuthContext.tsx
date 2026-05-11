@@ -26,6 +26,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (credentials: { email?: string; phone?: string; password?: string }) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  verifyOtp: (email: string, otp: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<void>;
   selectedCity: string;
@@ -124,6 +125,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (registerData: RegisterData) => {
     const data = await authApi.register(registerData);
+    
+    // If backend returns tokens, log the user in immediately
+    if (data.access && data.user) {
+      await Promise.all([
+        AsyncStorage.setItem("khelam_token", data.access),
+        AsyncStorage.setItem("khelam_refresh_token", data.refresh),
+        AsyncStorage.setItem("khelam_user", JSON.stringify(data.user))
+      ]);
+
+      const cityName = typeof data.user.city === 'object' && data.user.city !== null 
+        ? (data.user.city as any).name 
+        : data.user.city;
+
+      setUser(data.user);
+      setSelectedCityState(cityName || "Kathmandu");
+      setSelectedSportState(data.user.sport || "Futsal");
+    }
+  };
+
+  const verifyOtp = async (email: string, otp: string) => {
+    const data = await authApi.verifyOtp(email, otp);
     await Promise.all([
       AsyncStorage.setItem("khelam_token", data.access),
       AsyncStorage.setItem("khelam_refresh_token", data.refresh),
@@ -173,6 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         login,
         register,
+        verifyOtp,
         logout,
         updateUser,
         selectedCity,

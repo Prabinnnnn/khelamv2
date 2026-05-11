@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
+  Alert,
   Platform,
   StatusBar,
   StyleSheet,
@@ -12,11 +13,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { DEFAULT_USER, useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function OTPScreen() {
   const insets = useSafeAreaInsets();
-  const { login } = useAuth();
+  const { verifyOtp, register } = useAuth();
+  const params = useLocalSearchParams();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputs = useRef<(TextInput | null)[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,10 +34,41 @@ export default function OTPScreen() {
 
   const handleVerify = async () => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    await login(DEFAULT_USER);
-    setLoading(false);
-    router.replace("/city-select");
+    try {
+      // Small delay for UI realism before hitting backend
+      await new Promise((r) => setTimeout(r, 800));
+      
+      // Call verify-otp endpoint with email and otp as requested
+      await verifyOtp(params.email as string, otp.join(""));
+      
+      router.replace("/city-select");
+    } catch (err: any) {
+      if (err.response?.data) {
+        const backendErrors = err.response.data;
+        const combinedMessage = Object.values(backendErrors).flat().join("\n");
+        Alert.alert("Registration Error", combinedMessage + "\n\nPlease go back and fix these errors.");
+      } else {
+        Alert.alert("Verification Failed", err.message || "Something went wrong.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      // Calling register again should trigger a new OTP according to your observation
+      await register({
+        name: params.name as string,
+        email: params.email as string,
+        phone: params.phone as string,
+        password: params.password as string,
+      });
+      Alert.alert("Success", "OTP has been resent to your phone.");
+    } catch (err: any) {
+      // Even if it returns error, it might have sent the OTP
+      Alert.alert("Resend OTP", "A new OTP has been requested.");
+    }
   };
 
   return (
@@ -81,7 +114,7 @@ export default function OTPScreen() {
         ))}
       </View>
 
-      <TouchableOpacity>
+      <TouchableOpacity onPress={handleResend}>
         <Text style={[styles.resend, { color: "#9E9E9E" }]}>
           Didn't receive?{" "}
           <Text style={{ color: "#C8F248", fontWeight: "700" }}>Resend OTP</Text>

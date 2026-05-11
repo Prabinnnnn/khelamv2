@@ -12,6 +12,7 @@ export interface RegisterData {
   email: string;
   phone: string;
   password?: string;
+  otp?: string;
 }
 
 const authApi = {
@@ -24,6 +25,11 @@ const authApi = {
 
   register: async (data: RegisterData) => {
     const response = await client.post<LoginResponse>("/auth/register/", data);
+    return response.data;
+  },
+
+  verifyOtp: async (email: string, otp: string) => {
+    const response = await client.post<LoginResponse>("/auth/verify-otp/", { email, otp });
     return response.data;
   },
 

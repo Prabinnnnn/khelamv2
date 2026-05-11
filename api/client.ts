@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // In Expo, variables starting with EXPO_PUBLIC_ are automatically loaded
 // Replace with your local IP (e.g., http://192.168.1.10:8000/api) for physical device testing
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8000/api"; 
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost/api";
 
 const client = axios.create({
   baseURL: BASE_URL,

@@ -63,30 +63,26 @@ export default function SignupScreen() {
       if (validateStep2()) {
         setLoading(true);
         try {
+          // Call register to trigger OTP creation on backend
           await register({ name, email, phone, password });
-          router.replace("/city-select");
+          
+          // Navigation logic: Always move to OTP screen if call succeeded
+          // We assume the backend sends an OTP and we need to verify it
+          router.push({
+            pathname: "/otp",
+            params: { name, email, phone, password }
+          });
         } catch (err: any) {
-          if (err.response?.data) {
-            const backendErrors = err.response.data;
-            // Map backend errors to local state (Django returns arrays, we take the first message)
-            const mappedErrors: Record<string, string> = {};
-            Object.keys(backendErrors).forEach(key => {
-              mappedErrors[key] = Array.isArray(backendErrors[key]) 
-                ? backendErrors[key][0] 
-                : backendErrors[key];
+          // If the backend returns a 400 but it mentions OTP, we still go to OTP screen
+          const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+          if (errorMsg.toLowerCase().includes("otp")) {
+             router.push({
+              pathname: "/otp",
+              params: { name, email, phone, password }
             });
-            
-            setErrors(mappedErrors);
-
-            // Determine if we need to switch back to step 1 for an error there
-            if (mappedErrors.email || mappedErrors.phone || mappedErrors.name) {
-              setStep(1);
-            }
-
-            const combinedMessage = Object.values(backendErrors).flat().join("\n");
-            Alert.alert("Signup Error", combinedMessage);
           } else {
-            Alert.alert("Signup Failed", err.message || "Could not create account. Please try again.");
+            const displayMsg = err.response?.data ? Object.values(err.response.data).flat().join("\n") : err.message;
+            Alert.alert("Registration Error", displayMsg || "Failed to start registration.");
           }
         } finally {
           setLoading(false);
